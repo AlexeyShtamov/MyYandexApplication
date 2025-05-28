@@ -1,6 +1,5 @@
 package com.example.myyandexapplicationv3.ui
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,42 +31,115 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplicationyandex.model.Note
 import com.example.myapplicationyandex.model.Priority
 import com.example.myyandexapplicationv3.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
-@Preview(showBackground = true)
 @Composable
-fun NewText(){
-    Text(text = "Lexa", color = Color.Red)
+fun NoteEditScreen(
+    initialNote: Note? = null,
+    onSave: (Note) -> Unit,
+    onBack: () -> Unit
+) {
+    val colors = listOf(
+        Color(0xFFFFC0CB),
+        Color(0xFFFFE0B2),
+        Color(0xFFB2FFB2),
+        Color(0xFFADD8E6),
+        Color(0xFFFFFF99),
+    )
+
+    val priorities = listOf(Priority.LOW, Priority.NORMAL, Priority.HIGH)
+
+    var selectedColor by remember {
+        mutableStateOf(initialNote?.color?.let { Color(it) } ?: colors[0])
+    }
+    var selectedPriority by remember {
+        mutableStateOf(initialNote?.priority ?: Priority.NORMAL)
+    }
+    var title by remember { mutableStateOf(initialNote?.title ?: "") }
+    var content by remember { mutableStateOf(initialNote?.content ?: "") }
+
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+    ) {
+        SimpleLayout(
+            title = title,
+            onTitleChange = { title = it },
+            content = content,
+            onContentChange = { content = it }
+        )
+        SelfDestruction()
+        ColorPicker(
+            colors = colors,
+            selectedColor = selectedColor,
+            onColorSelected = { selectedColor = it }
+        )
+        PrioritySelector(
+            priorities = priorities,
+            selectedPriority = selectedPriority,
+            onPrioritySelected = { selectedPriority = it }
+        )
+
+        Button(
+            onClick = {
+                val note = Note(
+                    uid = initialNote?.uid ?: UUID.randomUUID(),
+                    title = title,
+                    content = content,
+                    color = selectedColor.toArgb(),
+                    priority = selectedPriority
+                )
+                onSave(note)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(if (initialNote != null) "Обновить заметку" else "Сохранить заметку")
+        }
+    }
 }
 
 @Composable
-fun SimpleLayout() {
+fun SimpleLayout(
+    title: String,
+    onTitleChange: (String) -> Unit,
+    content: String,
+    onContentChange: (String) -> Unit
+) {
     Column{
 
-        val title = remember { mutableStateOf("") }
         TextField(
-            value = title.value,
-            onValueChange = {newText -> title.value = newText},
-            label = { Text(stringResource(R.string.note_name))},
+            value = title,
+            onValueChange = onTitleChange,
+            label = { Text(stringResource(R.string.note_name)) },
             placeholder = { Text(stringResource(R.string.note_name)) },
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            singleLine = true)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            singleLine = true
+        )
 
-        val text = remember { mutableStateOf("") }
         TextField(
-            value = text.value,
-            onValueChange = {newText -> text.value = newText},
+            value = content,
+            onValueChange = onContentChange,
             label = { Text(stringResource(R.string.note_text)) },
             placeholder = { Text(stringResource(R.string.note_text)) },
-            modifier = Modifier.fillMaxWidth().padding(16.dp))
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
     }
 }
 
