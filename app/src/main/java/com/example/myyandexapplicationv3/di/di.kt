@@ -5,6 +5,7 @@ import com.example.myyandexapplicationv3.domain.note.repository.FileNotebook
 import com.example.myyandexapplicationv3.domain.note.repository.FileNotebookCache
 import com.example.myyandexapplicationv3.domain.note.repository.NotebookCache
 import com.example.myyandexapplicationv3.domain.note.repository.NotebookRemote
+import com.example.myyandexapplicationv3.domain.note.repository.NotebookRemoteImpl
 import com.example.myyandexapplicationv3.domain.note.repository.NotebookRemoteStub
 import com.example.myyandexapplicationv3.domain.note.repository.NotebookRepository
 import com.example.myyandexapplicationv3.ui.note.presentation.NotesViewModel
@@ -28,7 +29,7 @@ val appModule = module {
     }
 
     single<NotebookRemote> {
-        NotebookRemoteStub()
+        NotebookRemoteImpl(authToken = "токен нужен")
     }
 
     single<NotebookRepository> {
