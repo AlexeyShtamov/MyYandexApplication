@@ -1,4 +1,4 @@
-package com.example.myapplicationyandex.model
+package com.example.myyandexapplicationv3.domain.note.model
 
 enum class Priority {
     LOW, NORMAL, HIGH;

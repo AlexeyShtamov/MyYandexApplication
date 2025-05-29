@@ -1,5 +1,6 @@
-package com.example.myyandexapplicationv3.ui
+package com.example.myyandexapplicationv3.ui.note.view
 
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,9 +25,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -37,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,60 +45,96 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.myapplicationyandex.model.Note
-import com.example.myapplicationyandex.model.Priority
+import com.example.myyandexapplicationv3.domain.note.model.Note
+import com.example.myyandexapplicationv3.domain.note.model.Priority
+import com.example.myyandexapplicationv3.ui.note.presentation.NotesUiState
+import com.example.myyandexapplicationv3.ui.note.presentation.NotesViewModel
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 
 @Composable
 fun AllNotesScreen(
-    viewModel: NotesViewModel = viewModel(),
+    viewModel: NotesViewModel = koinViewModel(),
     onAddNote: () -> Unit,
     onEditNote: (UUID) -> Unit
 ) {
-    val notes by viewModel.notes.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddNote,
                 modifier = Modifier.padding(16.dp)
-            ){
-                    Icon(Icons.Default.Add, contentDescription = "Add note")
-                }
-
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add note")
+            }
         }
     ) { paddingValues ->
-        if (notes.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Нет заметок. Нажмите + чтобы создать новую")
+        when (uiState) {
+            is NotesUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Загрузка...")
+                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                items(
-                    items = notes,
-                    key = { note -> note.uid }
-                ) { note ->
-                    SwipeToDeleteContainer(
-                        onDelete = { viewModel.deleteNote(note.uid) },
-                        content = {
-                            NoteItem(
-                                note = note,
-                                onClick = { onEditNote(note.uid) },
-                                onDelete = { viewModel.deleteNote(note.uid) }
+            is NotesUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Ошибка загрузки")
+                }
+            }
+            is NotesUiState.Success -> {
+                val notes = (uiState as NotesUiState.Success).notes
+
+                if (notes.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Нет заметок. Нажмите + чтобы создать новую")
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                    ) {
+                        items(
+                            items = notes,
+                            key = { note -> note.uid }
+                        ) { note ->
+                            SwipeToDeleteContainer(
+                                onDelete = {
+                                    coroutineScope.launch {
+                                        viewModel.deleteNote(note.uid)
+                                    }
+                                },
+                                content = {
+                                    NoteItem(
+                                        note = note,
+                                        onClick = { onEditNote(note.uid) },
+                                        onDelete = {
+                                            coroutineScope.launch {
+                                                viewModel.deleteNote(note.uid)
+                                            }
+                                        }
+                                    )
+                                }
                             )
                         }
-                    )
+                    }
                 }
             }
         }
@@ -120,7 +156,7 @@ fun SwipeToDeleteContainer(
         return
     }
 
-    SwipeToDismissBox (
+    SwipeToDismissBox(
         state = rememberSwipeToDismissBoxState(
             confirmValueChange = { value ->
                 if (value == SwipeToDismissBoxValue.EndToStart) {
@@ -154,14 +190,14 @@ fun SwipeToDeleteContainer(
 @Composable
 fun NoteItem(
     note: Note,
-    onClick: () -> Unit,
+    onClick: (Note) -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable(onClick = onClick),
+            .clickable { onClick(note) },
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, Color.LightGray)
     ) {
@@ -178,10 +214,16 @@ fun NoteItem(
                 Text(
                     text = note.title,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
                     Text(
                         text = when (note.priority) {
                             Priority.LOW -> "Низкий"
@@ -191,11 +233,9 @@ fun NoteItem(
                         color = when (note.priority) {
                             Priority.HIGH -> Color.Red
                             else -> Color.Black
-                        }
+                        },
+                        modifier = Modifier.padding(end = 8.dp)
                     )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
                 }
             }
 

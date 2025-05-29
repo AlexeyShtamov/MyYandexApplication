@@ -1,4 +1,4 @@
-package com.example.myyandexapplicationv3.ui
+package com.example.myyandexapplicationv3.ui.note.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,9 +23,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,8 +38,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplicationyandex.model.Note
-import com.example.myapplicationyandex.model.Priority
+import com.example.myyandexapplicationv3.domain.note.model.Note
+import com.example.myyandexapplicationv3.domain.note.model.Priority
 import com.example.myyandexapplicationv3.R
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -59,14 +62,21 @@ fun NoteEditScreen(
 
     val priorities = listOf(Priority.LOW, Priority.NORMAL, Priority.HIGH)
 
-    var selectedColor by remember {
-        mutableStateOf(initialNote?.color?.let { Color(it) } ?: colors[0])
+    val currentNote by rememberUpdatedState(initialNote)
+
+    var selectedColor by remember { mutableStateOf(colors[0]) }
+    var selectedPriority by remember { mutableStateOf(Priority.NORMAL) }
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+
+    LaunchedEffect(currentNote) {
+        currentNote?.let { note ->
+            title = note.title
+            content = note.content
+            selectedColor = note.color?.let { Color(it) } ?: colors[0]
+            selectedPriority = note.priority ?: Priority.NORMAL
+        }
     }
-    var selectedPriority by remember {
-        mutableStateOf(initialNote?.priority ?: Priority.NORMAL)
-    }
-    var title by remember { mutableStateOf(initialNote?.title ?: "") }
-    var content by remember { mutableStateOf(initialNote?.content ?: "") }
 
     Column(
         modifier = Modifier

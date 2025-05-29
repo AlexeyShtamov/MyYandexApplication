@@ -1,4 +1,4 @@
-package com.example.myyandexapplicationv3.ui.theme
+package com.example.myyandexapplicationv3.domain.note.model.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

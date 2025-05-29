@@ -1,7 +1,6 @@
-package com.example.myapplicationyandex.model
+package com.example.myyandexapplicationv3.domain.note.model
 
 import android.graphics.Color
-import android.util.Log
 import org.json.JSONObject
 import timber.log.Timber
 import java.util.UUID
