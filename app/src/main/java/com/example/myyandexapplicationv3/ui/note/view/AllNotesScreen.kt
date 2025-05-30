@@ -1,6 +1,5 @@
-package com.example.myyandexapplicationv3.ui.note.view
+package com.example.myyandexapplicationv3.ui
 
-import org.koin.androidx.compose.koinViewModel
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,7 +24,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -45,11 +46,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myyandexapplicationv3.R
 import com.example.myyandexapplicationv3.domain.note.model.Note
 import com.example.myyandexapplicationv3.domain.note.model.Priority
+import com.example.myyandexapplicationv3.domain.note.model.toColor
+import com.example.myyandexapplicationv3.domain.note.model.toUiString
 import com.example.myyandexapplicationv3.ui.note.presentation.NotesUiState
 import com.example.myyandexapplicationv3.ui.note.presentation.NotesViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import java.util.UUID
 
 
@@ -67,9 +72,10 @@ fun AllNotesScreen(
             FloatingActionButton(
                 onClick = onAddNote,
                 modifier = Modifier.padding(16.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add note")
-            }
+            ){
+                    Icon(Icons.Default.Add, contentDescription = "Add note")
+                }
+
         }
     ) { paddingValues ->
         when (uiState) {
@@ -156,7 +162,7 @@ fun SwipeToDeleteContainer(
         return
     }
 
-    SwipeToDismissBox(
+    SwipeToDismissBox (
         state = rememberSwipeToDismissBoxState(
             confirmValueChange = { value ->
                 if (value == SwipeToDismissBoxValue.EndToStart) {
@@ -214,10 +220,7 @@ fun NoteItem(
                 Text(
                     text = note.title,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    fontWeight = FontWeight.Bold
                 )
 
                 Row(
@@ -225,17 +228,11 @@ fun NoteItem(
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
-                        text = when (note.priority) {
-                            Priority.LOW -> "Низкий"
-                            Priority.NORMAL -> "Средний"
-                            Priority.HIGH -> "Высокий"
-                        },
-                        color = when (note.priority) {
-                            Priority.HIGH -> Color.Red
-                            else -> Color.Black
-                        },
-                        modifier = Modifier.padding(end = 8.dp)
+                        text = note.priority.toUiString(),
+                        color = note.priority.toColor()
                     )
+
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             }
 
