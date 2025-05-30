@@ -24,9 +24,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -41,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,6 +47,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplicationyandex.model.Note
 import com.example.myapplicationyandex.model.Priority
+import com.example.myapplicationyandex.model.toColor
+import com.example.myapplicationyandex.model.toUiString
+import com.example.myyandexapplicationv3.R
 import java.util.UUID
 
 
@@ -77,7 +79,7 @@ fun AllNotesScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Нет заметок. Нажмите + чтобы создать новую")
+                Text(stringResource(R.string.no_notes))
             }
         } else {
             LazyColumn(
@@ -183,19 +185,11 @@ fun NoteItem(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = when (note.priority) {
-                            Priority.LOW -> "Низкий"
-                            Priority.NORMAL -> "Средний"
-                            Priority.HIGH -> "Высокий"
-                        },
-                        color = when (note.priority) {
-                            Priority.HIGH -> Color.Red
-                            else -> Color.Black
-                        }
+                        text = note.priority.toUiString(),
+                        color = note.priority.toColor()
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
-
                 }
             }
 

@@ -37,11 +37,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplicationyandex.model.Note
 import com.example.myapplicationyandex.model.Priority
+import com.example.myapplicationyandex.model.toUiString
 import com.example.myyandexapplicationv3.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+
+private val noteColors = listOf(
+    Color(0xFFFFC0CB),  // розовый
+    Color(0xFFFFE0B2),  // оранжевый
+    Color(0xFFB2FFB2),  // зеленый
+    Color(0xFFADD8E6),  // голубой
+    Color(0xFFFFFF99)   // желтый
+)
+
+private val notePriorities = listOf(Priority.LOW, Priority.NORMAL, Priority.HIGH)
 
 @Composable
 fun NoteEditScreen(
@@ -49,18 +60,9 @@ fun NoteEditScreen(
     onSave: (Note) -> Unit,
     onBack: () -> Unit
 ) {
-    val colors = listOf(
-        Color(0xFFFFC0CB),
-        Color(0xFFFFE0B2),
-        Color(0xFFB2FFB2),
-        Color(0xFFADD8E6),
-        Color(0xFFFFFF99),
-    )
-
-    val priorities = listOf(Priority.LOW, Priority.NORMAL, Priority.HIGH)
 
     var selectedColor by remember {
-        mutableStateOf(initialNote?.color?.let { Color(it) } ?: colors[0])
+        mutableStateOf(initialNote?.color?.let { Color(it) } ?: noteColors[0])
     }
     var selectedPriority by remember {
         mutableStateOf(initialNote?.priority ?: Priority.NORMAL)
@@ -81,12 +83,12 @@ fun NoteEditScreen(
         )
         SelfDestruction()
         ColorPicker(
-            colors = colors,
+            colors = noteColors,
             selectedColor = selectedColor,
             onColorSelected = { selectedColor = it }
         )
         PrioritySelector(
-            priorities = priorities,
+            priorities = notePriorities,
             selectedPriority = selectedPriority,
             onPrioritySelected = { selectedPriority = it }
         )
@@ -106,7 +108,7 @@ fun NoteEditScreen(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(if (initialNote != null) "Обновить заметку" else "Сохранить заметку")
+            Text(if (initialNote != null) stringResource(R.string.update_note) else stringResource(R.string.create_note))
         }
     }
 }
@@ -198,7 +200,7 @@ fun DatePickerButton() {
                 }
             }
         }
-        Text("Выбрано: ${selectedDate}", fontSize = 18.sp, modifier = Modifier.padding(top = 5.dp))
+        Text(stringResource(R.string.choosed) + " ${selectedDate}", fontSize = 18.sp, modifier = Modifier.padding(top = 5.dp))
     }
 }
 
@@ -250,7 +252,7 @@ fun PrioritySelector(
     onPrioritySelected: (Priority) -> Unit
 ) {
     Column {
-        Text("Важность:", fontSize = 20.sp)
+        Text(stringResource(R.string.priority), fontSize = 20.sp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -272,11 +274,7 @@ fun PrioritySelector(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = when (priority) {
-                            Priority.LOW -> "\uD83D\uDE34 Низкий"
-                            Priority.NORMAL -> "\uD83D\uDE4F Средний"
-                            Priority.HIGH -> "❗ Высокий"
-                        },
+                        text = priority.toUiString(),
                         fontSize = 13.sp,
                         color = Color.Black
                     )
