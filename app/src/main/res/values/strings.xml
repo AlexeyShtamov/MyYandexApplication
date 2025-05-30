@@ -5,4 +5,9 @@
     <string name="self_destructive">Добавить дату самоуничтожения</string>
     <string name="choose_date">Выбрать дату</string>
     <string name="note_color">Цвет заметки:</string>
+    <string name="no_notes">Нет заметок. Нажмите + чтобы создать новую</string>
+    <string name="create_note">Сохранить заметку</string>
+    <string name="update_note">Обновить заметку</string>
+    <string name="choosed">Выбранно:</string>
+    <string name="priority">Важность:</string>
 </resources>

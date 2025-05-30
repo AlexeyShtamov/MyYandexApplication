@@ -10,8 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myyandexapplicationv3.domain.note.model.Note
-import com.example.myyandexapplicationv3.ui.note.view.AllNotesScreen
-import com.example.myyandexapplicationv3.ui.note.view.NoteEditScreen
+import com.example.myyandexapplicationv3.ui.AllNotesScreen
+import com.example.myyandexapplicationv3.ui.NoteEditScreen
 import com.example.myyandexapplicationv3.ui.note.presentation.NotesViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
