@@ -21,12 +21,14 @@ import timber.log.Timber
 import java.util.UUID
 
 class NotebookRemoteImpl(
-    private val baseUrl: String = "https://beta.mrdekk.ru/todo",
+    private val baseUrl: String = "https://hive.mrdekk.ru/todo",
     private val authToken: String
 ) : NotebookRemote {
 
     private val client = OkHttpClient()
     private val jsonMediaType = "application/json".toMediaType()
+    private var currentRevision: Int = 0
+
 
     override suspend fun fetchNotes(): List<Note> = withContext(Dispatchers.IO) {
         val request = Request.Builder()
@@ -34,22 +36,17 @@ class NotebookRemoteImpl(
             .addHeader("Authorization", "Bearer $authToken")
             .build()
 
-        try {
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) {
-                throw Exception("Failed to fetch notes: ${response.code}")
-            }
-
-            val jsonResponse = response.body?.string() ?: throw Exception("Empty response")
-            val todoResponse = parseTodoListResponse(jsonResponse)
-
-            todoResponse.list.map { todoItem ->
-                convertToNote(todoItem)
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Error fetching notes")
-            throw e
+        val response = client.newCall(request).execute()
+        if (!response.isSuccessful) {
+            throw Exception("Failed to fetch notes: ${response.code}")
         }
+
+        val jsonResponse = response.body?.string() ?: throw Exception("Empty response")
+        val todoResponse = parseTodoListResponse(jsonResponse)
+
+        currentRevision = todoResponse.revision
+
+        todoResponse.list.map { convertToNote(it) }
     }
 
     override suspend fun fetchNote(uid: UUID): Note? = withContext(Dispatchers.IO) {
@@ -75,27 +72,32 @@ class NotebookRemoteImpl(
         }
     }
 
-    override suspend fun uploadNote(note: Note): Unit = withContext(Dispatchers.IO) {
+    override suspend fun addNote(note: Note): Unit = withContext(Dispatchers.IO) {
         val todoItem = convertToTodoItem(note)
-        val json = JSONObject().apply {
-            put("id", todoItem.id)
-            put("text", todoItem.text)
-            put("importance", todoItem.importance)
-            todoItem.deadline?.let { put("deadline", it) }
-            put("done", todoItem.done)
-            todoItem.color?.let { put("color", it) }
-            put("created_at", todoItem.createdAt)
-            put("changed_at", todoItem.changedAt)
-            put("last_updated_by", todoItem.lastUpdatedBy)
-        }.toString()
+        val json = gson.toJson(todoItem)
+
+        val request = Request.Builder()
+            .url("$baseUrl/list")
+            .post(json.toRequestBody(jsonMediaType))
+            .addHeader("Authorization", "Bearer $authToken")
+            .addHeader("X-Last-Known-Revision", currentRevision.toString())
+            .build()
+
+        executeRequest(request, "add")
+    }
+
+    override suspend fun updateNote(note: Note): Unit = withContext(Dispatchers.IO) {
+        val todoItem = convertToTodoItem(note)
+        val json = gson.toJson(todoItem)
 
         val request = Request.Builder()
             .url("$baseUrl/list/${note.uid}")
             .put(json.toRequestBody(jsonMediaType))
             .addHeader("Authorization", "Bearer $authToken")
+            .addHeader("X-Last-Known-Revision", currentRevision.toString())
             .build()
 
-        executeRequest(request, "upload")
+        executeRequest(request, "update")
     }
 
     override suspend fun deleteNote(uid: UUID): Unit = withContext(Dispatchers.IO) {
@@ -103,6 +105,7 @@ class NotebookRemoteImpl(
             .url("$baseUrl/list/$uid")
             .delete()
             .addHeader("Authorization", "Bearer $authToken")
+            .addHeader("X-Last-Known-Revision", currentRevision.toString())
             .build()
 
         executeRequest(request, "delete")
@@ -159,14 +162,13 @@ class NotebookRemoteImpl(
         return Note(
             uid = todoItem.id,
             title = todoItem.text,
-            content = "", // Если нужно сохранить content отдельно
+            content = "",
             color = todoItem.color?.let { Color(android.graphics.Color.parseColor(it)).toArgb() } ?: 0,
             priority = when (todoItem.importance) {
                 "low" -> Priority.LOW
                 "important" -> Priority.HIGH
                 else -> Priority.NORMAL
             },
-            // Другие поля по необходимости
         )
     }
 
@@ -179,12 +181,12 @@ class NotebookRemoteImpl(
                 Priority.HIGH -> "important"
                 else -> "basic"
             },
-            deadline = null, // Можно добавить deadline из note
+            deadline = null,
             done = false,
             color = note.color?.let { String.format("#%06X", 0xFFFFFF and it) },
             createdAt = System.currentTimeMillis(),
             changedAt = System.currentTimeMillis(),
-            lastUpdatedBy = "android_device" // Можно использовать уникальный ID устройства
+            lastUpdatedBy = "android_device"
         )
     }
 }

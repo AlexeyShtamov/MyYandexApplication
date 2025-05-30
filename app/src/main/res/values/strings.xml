@@ -10,4 +10,9 @@
     <string name="update_note">Обновить заметку</string>
     <string name="choosed">Выбранно:</string>
     <string name="priority">Важность:</string>
+    <string name="loading">Загрузка...</string>
+    <string name="loading_error">Ошибка загрузки</string>
+    <string name="low_priority">😴 Низкий</string>
+    <string name="medium_priority">🙏 Средний</string>
+    <string name="high_priority">❗ Высокий</string>
 </resources>

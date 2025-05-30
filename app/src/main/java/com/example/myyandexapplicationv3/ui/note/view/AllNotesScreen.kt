@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,7 +87,7 @@ fun AllNotesScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Загрузка...")
+                    Text(stringResource(R.string.loading))
                 }
             }
             is NotesUiState.Error -> {
@@ -96,7 +97,7 @@ fun AllNotesScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Ошибка загрузки")
+                    Text(stringResource(R.string.loading_error))
                 }
             }
             is NotesUiState.Success -> {
@@ -109,7 +110,7 @@ fun AllNotesScreen(
                             .padding(paddingValues),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Нет заметок. Нажмите + чтобы создать новую")
+                        Text(stringResource(R.string.no_notes))
                     }
                 } else {
                     LazyColumn(

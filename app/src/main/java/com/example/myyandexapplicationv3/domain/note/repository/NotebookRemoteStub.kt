@@ -17,7 +17,12 @@ class NotebookRemoteStub : NotebookRemote {
         return remoteNotes[uid]
     }
 
-    override suspend fun uploadNote(note: Note) {
+    override suspend fun addNote(note: Note) {
+        Timber.d("Uploading note ${note.uid} to remote")
+        remoteNotes[note.uid] = note
+    }
+
+    override suspend fun updateNote(note: Note) {
         Timber.d("Uploading note ${note.uid} to remote")
         remoteNotes[note.uid] = note
     }
