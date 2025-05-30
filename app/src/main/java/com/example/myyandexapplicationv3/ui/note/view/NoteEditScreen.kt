@@ -35,10 +35,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplicationyandex.model.Note
-import com.example.myapplicationyandex.model.Priority
-import com.example.myapplicationyandex.model.toUiString
+import com.example.myyandexapplicationv3.domain.note.model.Note
+import com.example.myyandexapplicationv3.domain.note.model.Priority
 import com.example.myyandexapplicationv3.R
+import com.example.myyandexapplicationv3.domain.note.model.toUiString
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
