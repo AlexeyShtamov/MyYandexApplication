@@ -31,14 +31,14 @@ class NotebookRepository(
     suspend fun addNote(note: Note) {
         withContext(dispatcher) {
             cache.addNote(note)
-            remote.uploadNote(note)
+            remote.addNote(note)
         }
     }
 
     suspend fun updateNote(note: Note) {
         withContext(dispatcher) {
             cache.updateNote(note)
-            remote.uploadNote(note)
+            remote.updateNote(note)
         }
     }
 

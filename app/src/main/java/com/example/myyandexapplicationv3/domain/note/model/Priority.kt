@@ -1,6 +1,9 @@
 package com.example.myyandexapplicationv3.domain.note.model
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.example.myyandexapplicationv3.R
 
 
 enum class Priority {
@@ -11,11 +14,12 @@ enum class Priority {
     }
 }
 
+@Composable
 fun Priority.toUiString(): String {
     return when (this) {
-        Priority.LOW -> "\uD83D\uDE34 Низкий"
-        Priority.NORMAL -> "\uD83D\uDE4F Средний"
-        Priority.HIGH -> "❗ Высокий"
+        Priority.LOW -> stringResource(R.string.low_priority)
+        Priority.NORMAL -> stringResource(R.string.medium_priority)
+        Priority.HIGH -> stringResource(R.string.high_priority)
     }
 }
 
