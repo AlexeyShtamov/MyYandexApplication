@@ -1,4 +1,4 @@
-package com.example.myyandexapplicationv3.domain.note.repository
+package com.example.myyandexapplicationv3.domain.note.repository.remote
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -16,7 +16,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
 import timber.log.Timber
 import java.util.UUID
 
@@ -72,7 +71,7 @@ class NotebookRemoteImpl(
         }
     }
 
-    override suspend fun addNote(note: Note): Unit = withContext(Dispatchers.IO) {
+    override suspend fun addNote(note: Note): Int = withContext(Dispatchers.IO) {
         val todoItem = convertToTodoItem(note)
         val json = gson.toJson(todoItem)
 
@@ -83,10 +82,26 @@ class NotebookRemoteImpl(
             .addHeader("X-Last-Known-Revision", currentRevision.toString())
             .build()
 
-        executeRequest(request, "add")
+        Timber.d("Adding note with revision: $currentRevision")
+
+        val response = client.newCall(request).execute()
+        if (!response.isSuccessful) {
+            throw when (response.code) {
+                400 -> Exception("Data out of sync. Please refresh and try again.")
+                else -> Exception("Failed to add note: ${response.code}")
+            }
+        }
+
+        val jsonResponse = response.body?.string() ?: throw Exception("Empty response")
+        val todoResponse = parseTodoElementResponse(jsonResponse)
+
+        currentRevision = todoResponse.revision
+        Timber.d("Note added successfully. New revision: $currentRevision")
+
+        return@withContext currentRevision
     }
 
-    override suspend fun updateNote(note: Note): Unit = withContext(Dispatchers.IO) {
+    override suspend fun updateNote(note: Note): Int = withContext(Dispatchers.IO) {
         val todoItem = convertToTodoItem(note)
         val json = gson.toJson(todoItem)
 
@@ -97,10 +112,27 @@ class NotebookRemoteImpl(
             .addHeader("X-Last-Known-Revision", currentRevision.toString())
             .build()
 
-        executeRequest(request, "update")
+        Timber.d("Updating note ${note.uid} with revision: $currentRevision")
+
+        val response = client.newCall(request).execute()
+        if (!response.isSuccessful) {
+            throw when (response.code) {
+                400 -> Exception("Data out of sync. Please refresh and try again.")
+                404 -> ApiError.NotFound("Note not found")
+                else -> Exception("Failed to update note: ${response.code}")
+            }
+        }
+
+        val jsonResponse = response.body?.string() ?: throw Exception("Empty response")
+        val todoResponse = parseTodoElementResponse(jsonResponse)
+
+        currentRevision = todoResponse.revision
+        Timber.d("Note updated successfully. New revision: $currentRevision")
+
+        return@withContext currentRevision
     }
 
-    override suspend fun deleteNote(uid: UUID): Unit = withContext(Dispatchers.IO) {
+    override suspend fun deleteNote(uid: UUID): Int = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url("$baseUrl/list/$uid")
             .delete()
@@ -108,7 +140,24 @@ class NotebookRemoteImpl(
             .addHeader("X-Last-Known-Revision", currentRevision.toString())
             .build()
 
-        executeRequest(request, "delete")
+        Timber.d("Deleting note $uid with revision: $currentRevision")
+
+        val response = client.newCall(request).execute()
+        if (!response.isSuccessful) {
+            throw when (response.code) {
+                400 -> Exception("Data out of sync. Please refresh and try again.")
+                404 -> ApiError.NotFound("Note not found")
+                else -> Exception("Failed to delete note: ${response.code}")
+            }
+        }
+
+        val jsonResponse = response.body?.string() ?: throw Exception("Empty response")
+        val todoResponse = parseTodoElementResponse(jsonResponse)
+
+        currentRevision = todoResponse.revision
+        Timber.d("Note deleted successfully. New revision: $currentRevision")
+
+        return@withContext currentRevision
     }
 
     private fun executeRequest(request: Request, operation: String): Boolean {
